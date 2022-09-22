@@ -1,6 +1,7 @@
 import pygame
 from settings import *
 from support import *
+from timer import *
 
 
 # 基本角色
@@ -10,7 +11,7 @@ class Player(pygame.sprite.Sprite):  # 继承自精灵类
 
         # 美术资源
         self.import_assets()
-        self.status = 'down_idle'   # 初始状态，角色静止
+        self.status = 'down_idle'  # 初始状态，角色静止
         self.frame_index = 0  # 帧
 
         # general setup
@@ -23,6 +24,17 @@ class Player(pygame.sprite.Sprite):  # 继承自精灵类
         self.direction = pygame.math.Vector2()
         self.pos = pygame.math.Vector2(self.rect.center)
         self.speed = 200
+
+        # timers
+        self.timers = {
+            'tool use': Timer(350, self.use_tool)   # 道具定时器
+        }
+
+        # tools 角色选择的道具
+        self.selected_tool = "water"
+
+    def use_tool(self):
+        print(self.selected_tool)
 
     # 加载角色立绘
     def import_assets(self):
@@ -47,30 +59,45 @@ class Player(pygame.sprite.Sprite):  # 继承自精灵类
 
     def input(self):
         keys = pygame.key.get_pressed()
+        if not self.timers['tool use'].active:
+            # directions
+            if keys[pygame.K_w]:
+                self.direction.y = -1
+                self.status = 'up'
+            elif keys[pygame.K_s]:
+                self.direction.y = 1
+                self.status = 'down'
+            else:
+                self.direction.y = 0
 
-        if keys[pygame.K_w]:
-            self.direction.y = -1
-            self.status = 'up'
-        elif keys[pygame.K_s]:
-            self.direction.y = 1
-            self.status = 'down'
-        else:
-            self.direction.y = 0
+            if keys[pygame.K_d]:
+                self.direction.x = 1
+                self.status = 'right'
+            elif keys[pygame.K_a]:
+                self.direction.x = -1
+                self.status = 'left'
+            else:
+                self.direction.x = 0
 
-        if keys[pygame.K_d]:
-            self.direction.x = 1
-            self.status = 'right'
-        elif keys[pygame.K_a]:
-            self.direction.x = -1
-            self.status = 'left'
-        else:
-            self.direction.x = 0
+            # tool use 按空格键激活 使用道具 状态。持续一段时间之后自动失活
+            if keys[pygame.K_SPACE]:
+                self.timers['tool use'].activate()
+                self.direction = pygame.math.Vector2()
+                self.frame_index = 0
 
     # 获取角色不同状态的立绘
     def get_status(self):
         # idle 角色静止时的立绘
         if self.direction.magnitude() == 0:
             self.status = self.status.split('_')[0] + '_idle'
+
+        # tool use
+        if self.timers['tool use'].active:
+            self.status = self.status.split('_')[0] + '_' + self.selected_tool
+
+    def update_times(self):
+        for timer in self.timers.values():
+            timer.update()
 
     def move(self, dt):
 
@@ -89,5 +116,7 @@ class Player(pygame.sprite.Sprite):  # 继承自精灵类
     def update(self, dt):
         self.input()  # 获取输入
         self.get_status()  # 获取角色当前状态
+        self.update_times()
+
         self.move(dt)
         self.animate(dt)
