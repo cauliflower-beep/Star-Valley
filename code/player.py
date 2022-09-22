@@ -130,7 +130,7 @@ class Player(pygame.sprite.Sprite):  # 继承自精灵类
         if self.timers['tool use'].active:
             self.status = self.status.split('_')[0] + '_' + self.selected_tool
 
-    def update_times(self):
+    def update_timers(self):
         for timer in self.timers.values():
             timer.update()
 
@@ -151,7 +151,7 @@ class Player(pygame.sprite.Sprite):  # 继承自精灵类
     def update(self, dt):
         self.input()  # 获取输入
         self.get_status()  # 获取角色当前状态
-        self.update_times()
+        self.update_timers()
 
         self.move(dt)
         self.animate(dt)
