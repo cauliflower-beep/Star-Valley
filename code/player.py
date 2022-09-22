@@ -10,8 +10,8 @@ class Player(pygame.sprite.Sprite):  # 继承自精灵类
 
         # 美术资源
         self.import_assets()
-        self.status = 'left_water'
-        self.frame_index = 0 # 帧
+        self.status = 'down_idle'   # 初始状态，角色静止
+        self.frame_index = 0  # 帧
 
         # general setup
         # 显示属性
@@ -34,24 +34,43 @@ class Player(pygame.sprite.Sprite):  # 继承自精灵类
                            }
         for animation in self.animations.keys():
             full_path = '../graphics/character/' + animation
-            self.animations[animation]=import_forder(full_path)
+            self.animations[animation] = import_forder(full_path)
+
+    # 动画效果 主要靠帧数实现
+    def animate(self, dt):
+        self.frame_index += 4 * dt
+        if self.frame_index >= len(self.animations[self.status]):
+            self.frame_index = 0
+        self.image = self.animations[self.status][int(self.frame_index)]
+
+        # 获取键盘等设备输入信号，转换相应状态
 
     def input(self):
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_w]:
             self.direction.y = -1
+            self.status = 'up'
         elif keys[pygame.K_s]:
             self.direction.y = 1
+            self.status = 'down'
         else:
             self.direction.y = 0
 
         if keys[pygame.K_d]:
             self.direction.x = 1
+            self.status = 'right'
         elif keys[pygame.K_a]:
             self.direction.x = -1
+            self.status = 'left'
         else:
             self.direction.x = 0
+
+    # 获取角色不同状态的立绘
+    def get_status(self):
+        # idle 角色静止时的立绘
+        if self.direction.magnitude() == 0:
+            self.status = self.status.split('_')[0] + '_idle'
 
     def move(self, dt):
 
@@ -68,5 +87,7 @@ class Player(pygame.sprite.Sprite):  # 继承自精灵类
         self.rect.centery = self.pos.y
 
     def update(self, dt):
-        self.input()
+        self.input()  # 获取输入
+        self.get_status()  # 获取角色当前状态
         self.move(dt)
+        self.animate(dt)
