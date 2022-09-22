@@ -10,6 +10,7 @@ class Player(pygame.sprite.Sprite):  # 继承自精灵类
         super().__init__(group)  # 只要创建一个 Player 实例，就会存在 group 这个组里面
 
         # 美术资源
+        self.animations = None
         self.import_assets()
         self.status = 'down_idle'  # 初始状态，角色静止
         self.frame_index = 0  # 帧
@@ -27,14 +28,28 @@ class Player(pygame.sprite.Sprite):  # 继承自精灵类
 
         # timers
         self.timers = {
-            'tool use': Timer(350, self.use_tool)   # 道具定时器
+            'tool use': Timer(350, self.use_tool),  # 道具定时器
+            'tool switch': Timer(200),
+            'seed use': Timer(350, self.use_seed),
+            'seed switch': Timer(200),
         }
 
-        # tools 角色选择的道具
-        self.selected_tool = "water"
+        # tools
+        self.tools = ['hoe', 'axe', 'water']
+        self.tool_index = 0
+        self.selected_tool = self.tools[self.tool_index]
+
+        # seeds
+        self.seeds = ['corn', 'tomato']
+        self.seed_index = 0
+        self.selected_seed = self.seeds[self.seed_index]
 
     def use_tool(self):
-        print(self.selected_tool)
+        # print(self.selected_tool)
+        pass
+
+    def use_seed(self):
+        pass
 
     # 加载角色立绘
     def import_assets(self):
@@ -79,11 +94,31 @@ class Player(pygame.sprite.Sprite):  # 继承自精灵类
             else:
                 self.direction.x = 0
 
-            # tool use 按空格键激活 使用道具 状态。持续一段时间之后自动失活
+            # tool use 空格键使用道具
             if keys[pygame.K_SPACE]:
                 self.timers['tool use'].activate()
                 self.direction = pygame.math.Vector2()
                 self.frame_index = 0
+
+            # change tool   q键切换道具
+            if keys[pygame.K_q] and not self.timers['tool switch'].active:
+                self.timers['tool switch'].activate()
+                self.tool_index += 1
+                self.tool_index = self.tool_index if self.tool_index < len(self.tools) else 0
+                self.selected_tool = self.tools[self.tool_index]
+
+            # seed use
+            if keys[pygame.K_LCTRL]:
+                self.timers['seed use'].activate()
+                self.direction = pygame.math.Vector2()
+                self.frame_index = 0
+
+            # change seed
+            if keys[pygame.K_e] and not self.timers['seed switch'].active:
+                self.timers['seed switch'].activate()
+                self.seed_index += 1
+                self.seed_index = self.seed_index if self.seed_index < len(self.seeds) else 0
+                self.selected_seed = self.seeds[self.seed_index]
 
     # 获取角色不同状态的立绘
     def get_status(self):
